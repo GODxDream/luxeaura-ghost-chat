@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="LuxeAura Ghost Chat - Ultra-luxury privacy-first real-time messaging">
+    <title>👻 LuxeAura Ghost Chat</title>
+    <script src="https://js.pusher.com/7.2/pusher.min.js"></script>
+    <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-black: #000000;
+            --accent-gold: #D4AF37;
+            --bright-gold: #FFD700;
+            --dark-gray: #1a1a1a;
+            --darker-gray: #111111;
+            --very-dark-gray: #0a0a0a;
+            --font-mono: 'Courier New', 'Courier', monospace;
+            --font-serif: 'Georgia', 'Garamond', serif;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            background-color: var(--primary-black);
+            color: var(--accent-gold);
+            font-family: var(--font-mono);
+            letter-spacing: 0.05em;
+            overflow: hidden;
+        }
+
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ENTRY SCREEN */
+        #entryScreen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary-black) 0%, var(--very-dark-gray) 100%);
+            padding: 20px;
+            animation: fadeIn 0.8s ease-in;
+        }
+
+        #entryScreen.hidden {
+            display: none;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .entry-container {
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .entry-title {
+            font-size: clamp(2.5rem, 8vw, 3.5rem);
+            font-family: var(--font-serif);
+            color: var(--accent-gold);
+            text-shadow: 0 0 20px rgba(212, 175, 55, 0.5), 0 0 40px rgba(212, 175, 55, 0.2);
+            margin-bottom: 10px;
+            letter-spacing: 0.1em;
+        }
+
+        .entry-subtitle {
+            font-size: clamp(0.9rem, 3vw, 1.1rem);
+            color: var(--bright-gold);
+            margin-bottom: 40px;
+            opacity: 0.8;
+            letter-spacing: 0.15em;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            text-align: left;
+        }
+
+        .form-label {
+            display: block;
+            font-size: clamp(0.85rem, 2.5vw, 1rem);
+            color: var(--accent-gold);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            text-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+        }
+
+        #ghostNameInput {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: clamp(0.9rem, 2.5vw, 1rem);
+            background-color: var(--very-dark-gray);
+            border: 2px solid var(--accent-gold);
+            color: var(--accent-gold);
+            font-family: var(--font-mono);
+            letter-spacing: 0.05em;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            text-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
+        }
+
+        #ghostNameInput:focus {
+            outline: none;
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.5), inset 0 0 10px rgba(212, 175, 55, 0.1);
+            background-color: var(--darker-gray);
+        }
+
+        #ghostNameInput::placeholder {
+            color: var(--accent-gold);
+            opacity: 0.5;
+        }
+
+        .captcha-container {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+            transform: scale(0.85);
+            transform-origin: center;
+        }
+
+        @media (max-width: 480px) {
+            .captcha-container {
+                transform: scale(0.75);
+            }
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 30px;
+            flex-direction: column;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            font-size: clamp(0.9rem, 2.5vw, 1rem);
+            font-family: var(--font-mono);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            border: 2px solid var(--accent-gold);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(212, 175, 55, 0.3);
+        }
+
+        .btn-primary {
+            background-color: var(--accent-gold);
+            color: var(--primary-black);
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background-color: var(--bright-gold);
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.6), 0 0 50px rgba(212, 175, 55, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn-primary:disabled {
+            background-color: var(--darker-gray);
+            color: var(--accent-gold);
+            border-color: var(--darker-gray);
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--accent-gold);
+        }
+
+        .btn-secondary:hover {
+            background-color: rgba(212, 175, 55, 0.1);
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+        }
+
+        .info-text {
+            font-size: clamp(0.75rem, 2vw, 0.9rem);
+            color: var(--bright-gold);
+            opacity: 0.7;
+            margin-top: 20px;
+            text-align: center;
+            letter-spacing: 0.05em;
+        }
+
+        .info-icon {
+            font-size: clamp(1rem, 3vw, 1.3rem);
+            margin-right: 5px;
+        }
+
+        /* CHAT SCREEN */
+        #chatScreen {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary-black) 0%, var(--very-dark-gray) 100%);
+        }
+
+        #chatScreen.hidden {
+            display: none;
+        }
+
+        .chat-header {
+            background-color: var(--darker-gray);
+            border-bottom: 2px solid var(--accent-gold);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .header-title {
+            font-size: clamp(1.2rem, 3vw, 1.5rem);
+            color: var(--accent-gold);
+            font-family: var(--font-serif);
+            text-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+            letter-spacing: 0.1em;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: clamp(0.8rem, 2vw, 0.95rem);
+            color: var(--bright-gold);
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            background-color: #00ff00;
+            border-radius: 50%;
+            box-shadow: 0 0 8px rgba(0, 255, 0, 0.7);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .ghost-name-display {
+            font-size: clamp(0.85rem, 2vw, 1rem);
+            color: var(--accent-gold);
+            opacity: 0.8;
+            letter-spacing: 0.05em;
+        }
+
+        .exit-btn {
+            padding: 8px 16px;
+            font-size: clamp(0.75rem, 2vw, 0.9rem);
+            background-color: transparent;
+            color: var(--accent-gold);
+            border: 1px solid var(--accent-gold);
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: var(--font-mono);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .exit-btn:hover {
+            background-color: rgba(212, 175, 55, 0.1);
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent-gold) var(--very-dark-gray);
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: var(--very-dark-gray);
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: var(--accent-gold);
+            border-radius: 4px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: var(--bright-gold);
+        }
+
+        .message {
+            display: flex;
+            flex-direction: column;
+            max-width: 85%;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.own {
+            align-self: flex-end;
+            text-align: right;
+        }
+
+        .message.other {
+            align-self: flex-start;
+            text-align: left;
+        }
+
+        .message-sender {
+            font-size: clamp(0.7rem, 2vw, 0.85rem);
+            color: var(--bright-gold);
+            opacity: 0.7;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .message-bubble {
+            background-color: var(--darker-gray);
+            border: 1px solid var(--accent-gold);
+            border-radius: 6px;
+            padding: 12px 16px;
+            color: var(--accent-gold);
+            font-size: clamp(0.85rem, 2.5vw, 0.95rem);
+            word-wrap: break-word;
+            line-height: 1.5;
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        .message.own .message-bubble {
+            background-color: rgba(212, 175, 55, 0.1);
+            border-color: var(--bright-gold);
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
+        }
+
+        .message-bubble:hover {
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+        }
+
+        .message-time {
+            font-size: clamp(0.65rem, 1.5vw, 0.75rem);
+            color: var(--accent-gold);
+            opacity: 0.5;
+            margin-top: 5px;
+            letter-spacing: 0.05em;
+        }
+
+        .empty-messages {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--accent-gold);
+            opacity: 0.5;
+            text-align: center;
+            font-size: clamp(1rem, 3vw, 1.3rem);
+            letter-spacing: 0.1em;
+            padding: 20px;
+        }
+
+        .chat-input-area {
+            background-color: var(--darker-gray);
+            border-top: 2px solid var(--accent-gold);
+            padding: 15px 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            min-width: 200px;
+            display: flex;
+            gap: 10px;
+        }
+
+        #messageInput {
+            flex: 1;
+            padding: 12px 16px;
+            font-size: clamp(0.85rem, 2.5vw, 1rem);
+            background-color: var(--very-dark-gray);
+            border: 2px solid var(--accent-gold);
+            color: var(--accent-gold);
+            font-family: var(--font-mono);
+            letter-spacing: 0.05em;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            resize: none;
+            max-height: 100px;
+        }
+
+        #messageInput:focus {
+            outline: none;
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.5), inset 0 0 10px rgba(212, 175, 55, 0.1);
+            background-color: var(--darker-gray);
+        }
+
+        #messageInput::placeholder {
+            color: var(--accent-gold);
+            opacity: 0.5;
+        }
+
+        .send-btn {
+            padding: 12px 24px;
+            font-size: clamp(0.85rem, 2vw, 0.95rem);
+            background-color: var(--accent-gold);
+            color: var(--primary-black);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: var(--font-mono);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+        }
+
+        .send-btn:hover:not(:disabled) {
+            background-color: var(--bright-gold);
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.6), 0 0 50px rgba(212, 175, 55, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .send-btn:disabled {
+            background-color: var(--darker-gray);
+            color: var(--accent-gold);
+            border: 1px solid var(--darker-gray);
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        /* RESPONSIVE DESIGN */
+        @media (max-width: 768px) {
+            .chat-header {
+                padding: 12px 15px;
+            }
+
+            .chat-input-area {
+                padding: 12px 15px;
+            }
+
+            .message {
+                max-width: 95%;
+            }
+
+            .input-wrapper {
+                min-width: 0;
+                flex-direction: column;
+            }
+
+            .send-btn {
+                width: 100%;
+            }
+
+            .entry-container {
+                padding: 20px;
+            }
+
+            .button-group {
+                width: 100%;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .chat-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .status-indicator {
+                width: 100%;
+            }
+
+            .exit-btn {
+                width: 100%;
+            }
+
+            .chat-messages {
+                padding: 15px;
+                gap: 10px;
+            }
+
+            .message {
+                max-width: 100%;
+            }
+
+            .chat-input-area {
+                flex-direction: column;
+                padding: 12px;
+            }
+
+            .input-wrapper {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            #messageInput {
+                width: 100%;
+            }
+
+            .send-btn {
+                width: 100%;
+            }
+        }
+
+        /* ERROR & SUCCESS STATES */
+        .error {
+            color: #ff6b6b;
+            font-size: clamp(0.75rem, 2vw, 0.9rem);
+            margin-top: 10px;
+            letter-spacing: 0.05em;
+        }
+
+        .success {
+            color: #51cf66;
+            font-size: clamp(0.75rem, 2vw, 0.9rem);
+            margin-top: 10px;
+            letter-spacing: 0.05em;
+        }
+    </style>
+</head>
+<body>
+    <!-- ENTRY SCREEN -->
+    <div id="entryScreen">
+        <div class="entry-container">
+            <div class="entry-title">👻 LUXEAURA</div>
+            <div class="entry-subtitle">Ghost Chat</div>
+
+            <form id="entryForm" onsubmit="enterChat(event)">
+                <div class="form-group">
+                    <label class="form-label">Enter Your Ghost Name</label>
+                    <input
+                        type="text"
+                        id="ghostNameInput"
+                        placeholder="Your secret identity..."
+                        maxlength="30"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Complete Verification</label>
+                    <div class="captcha-container">
+                        <div class="h-captcha" data-sitekey="HCAPTCHA_PLACEHOLDER"></div>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button type="submit" id="enterChatBtn" class="btn btn-primary" disabled>
+                        Enter Chat
+                    </button>
+                </div>
+
+                <div class="info-text">
+                    <span class="info-icon">🔒</span>
+                    Your conversations are ephemeral. No traces. Complete privacy.
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- CHAT SCREEN -->
+    <div id="chatScreen" class="hidden">
+        <div class="chat-header">
+            <div>
+                <div class="header-title">👻 LUXEAURA GHOST CHAT</div>
+            </div>
+            <div class="status-indicator">
+                <span class="status-dot"></span>
+                <span>Connected</span>
+            </div>
+            <div class="ghost-name-display" id="ghostNameDisplay"></div>
+            <button class="exit-btn" onclick="exitChat()">Exit</button>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="empty-messages">✨ Begin your conversation... ✨</div>
+        </div>
+
+        <div class="chat-input-area">
+            <div class="input-wrapper">
+                <input
+                    type="text"
+                    id="messageInput"
+                    placeholder="Type your message..."
+                    maxlength="500"
+                >
+                <button class="send-btn" id="sendBtn" onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===============================================
+        // CONNECTIVITY SETTINGS
+        // ===============================================
+        // PASTE YOUR PUSHER CREDENTIALS BELOW:
+        // Get them from: https://dashboard.pusher.com/
+
+        const PUSHER_CONFIG = {
+            key: 'YOUR_PUSHER_APP_KEY_HERE',           // ← Replace with your Pusher App Key
+            cluster: 'YOUR_PUSHER_CLUSTER_HERE',       // ← Replace with your Cluster (e.g., 'mt1', 'us2', 'eu')
+            forceTLS: true,
+            enabledTransports: ['ws', 'wss'],
+        };
+
+        const HCAPTCHA_SITE_KEY = 'YOUR_HCAPTCHA_SITE_KEY_HERE';  // ← Replace with your hCaptcha Site Key
+
+        // ===============================================
+        // APPLICATION STATE
+        // ===============================================
+        const appState = {
+            ghostName: '',
+            pusher: null,
+            channel: null,
+            messages: [],
+            connected: false,
+            sessionId: generateSessionId(),
+        };
+
+        // ===============================================
+        // INITIALIZATION
+        // ===============================================
+        document.addEventListener('DOMContentLoaded', () => {
+            initializePusher();
+            setupEventListeners();
+            updateCaptchaPlaceholder();
+
+            // Clean up on page unload (complete privacy)
+            window.addEventListener('beforeunload', () => {
+                clearAllData();
+            });
+        });
+
+        // ===============================================
+        // PUSHER INITIALIZATION
+        // ===============================================
+        function initializePusher() {
+            try {
+                appState.pusher = new Pusher(PUSHER_CONFIG.key, {
