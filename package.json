@@ -20,11 +20,14 @@
   "engines": {
     "node": ">=18.0.0"
   },
+  "dependencies": {
+    "pusher": "^5.1.3"
+  },
   "devDependencies": {
     "http-server": "^14.1.1"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/GODxDreamRole/luxeaura-ghost-chat.git"
+    "url": "https://github.com/GODxDream/luxeaura-ghost-chat.git"
   }
 }
