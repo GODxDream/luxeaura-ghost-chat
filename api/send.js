@@ -9,27 +9,64 @@ const pusher = new Pusher({
 });
 
 export default async function handler(req, res) {
-  // Only allow POST requests
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+  );
+
+  // Handle OPTIONS request
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
   }
 
-  const { username, message } = req.body;
-
-  // Validate required fields
-  if (!username || !message) {
-    return res.status(400).json({ error: 'Missing username or message' });
+  // Only allow POST requests
+  if (req.method !== 'POST') {
+    return res.status(405).json({ 
+      error: 'Method not allowed. Only POST requests are accepted.' 
+    });
   }
 
   try {
-    await pusher.trigger("ghost-room", "message-event", {
-      username: username,
-      message: message
+    const { username, message } = req.body;
+
+    // Validate required fields
+    if (!username || typeof username !== 'string' || username.trim() === '') {
+      return res.status(400).json({ 
+        error: 'Missing or invalid "username" field.' 
+      });
+    }
+
+    if (!message || typeof message !== 'string' || message.trim() === '') {
+      return res.status(400).json({ 
+        error: 'Missing or invalid "message" field.' 
+      });
+    }
+
+    // Trigger Pusher event
+    await pusher.trigger('ghost-room', 'message-event', {
+      username: username.trim(),
+      message: message.trim(),
+      timestamp: new Date().toISOString()
     });
 
-    res.status(200).json({ status: 'sent' });
+    return res.status(200).json({ 
+      status: 'sent',
+      data: {
+        username: username.trim(),
+        message: message.trim(),
+        timestamp: new Date().toISOString()
+      }
+    });
   } catch (error) {
     console.error('Pusher error:', error);
-    res.status(500).json({ error: 'Failed to send message' });
+    return res.status(500).json({ 
+      error: 'Failed to send message. Please try again later.',
+      details: error.message 
+    });
   }
 }
