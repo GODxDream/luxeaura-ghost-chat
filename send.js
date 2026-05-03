@@ -9,7 +9,6 @@ const pusher = new Pusher({
 });
 
 module.exports = async (req, res) => {
-  // Handle CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -23,14 +22,12 @@ module.exports = async (req, res) => {
       const { username, message } = req.body;
       await pusher.trigger('ghost-room', 'message-event', {
         username: username,
-        message: message,
-        timestamp: new Date().toISOString()
+        message: message
       });
       return res.status(200).json({ status: 'sent' });
     } catch (error) {
       return res.status(500).json({ error: error.message });
     }
   }
-  
   res.status(405).send('Method Not Allowed');
 };
