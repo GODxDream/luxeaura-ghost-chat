@@ -1,0 +1,7 @@
+{
+  "name": "luxeaura-ghost-chat",
+  "version": "1.0.0",
+  "dependencies": {
+    "pusher": "^5.1.3"
+  }
+}
