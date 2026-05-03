@@ -1,9 +1,0 @@
-{
-  "name": "luxeaura-ghost-chat",
-  "version": "1.0.0",
-  "main": "index.js",
-  "dependencies": {
-    "pusher": "^5.1.3",
-    "express": "^4.18.2"
-  }
-}
